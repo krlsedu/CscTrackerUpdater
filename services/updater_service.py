@@ -25,6 +25,7 @@ class UpdaterService:
             apps_att = self.remote_repository.get_object("libraries",
                                                          data={"library": lib_name},
                                                          headers=headers)
+            apps_att.sort(key=lambda x: (x['app_att'] == 'CscTrackerUpdater', x['app_att']))
             for app_att in apps_att:
                 try:
                     self.logger.info(f"Updating {app_att['app_att']}")
