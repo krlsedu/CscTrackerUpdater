@@ -162,7 +162,7 @@ class UpdaterService:
                 self.logger.info("Dependency project found.")
                 for dependency in root.findall('dependencies/dependency', namespaces):
                     artifact_id = dependency.find('artifactId', namespaces).text
-                    if artifact_id == lib_name:
+                    if artifact_id == lib_name.replace("-dependency", ""):
                         version_element = dependency.find('version', namespaces)
                         version_element.text = version
 
