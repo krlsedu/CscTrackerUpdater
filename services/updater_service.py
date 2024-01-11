@@ -41,12 +41,12 @@ class UpdaterService:
                     changes = self.push_changes(folder_)
                     if changes["status"] == "ok":
                         self.logger.info(f"Updated {app_att['app_att']} successfully.")
-                        app_att['version'] = version
+                        app_att['library_version'] = version
                         self.remote_repository.update("libraries", ['id'], app_att, headers)
                     if os.path.exists(folder_):
                         shutil.rmtree(folder_)
                     changes['app_att'] = app_att['app_att']
-                    changes['version'] = version
+                    changes['library_version'] = version
                     changes['lib_name'] = lib_name
                     returns_.append(changes)
                 except Exception as e:
@@ -54,7 +54,7 @@ class UpdaterService:
                     error_ = {
                         "status": "error",
                         'app_att': app_att['app_att'],
-                        'version': version,
+                        'library_version': version,
                         'lib_name': lib_name,
                         'error': str(e)
                     }
