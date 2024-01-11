@@ -1,10 +1,7 @@
-import threading
-
 from csctracker_py_core.starter import Starter
-from csctracker_py_core.utils.request_info import RequestInfo
 
 from services.updater_service import UpdaterService
-from csctracker_py_core.utils.interceptor import g
+
 starter = Starter()
 app = starter.get_app()
 http_repository = starter.get_http_repository()
