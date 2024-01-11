@@ -35,6 +35,8 @@ class UpdaterService:
             for key in args.keys():
                 args_[key] = args[key]
             args_['library'] = lib_name
+            if 'period' in args_.keys():
+                args_['period'] = f"library_version <> {version}"
             apps_att = self.remote_repository.get_objects("libraries",
                                                           data=args_,
                                                           headers=headers)
