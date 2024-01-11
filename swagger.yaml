@@ -1,0 +1,68 @@
+openapi: 3.0.1
+info:
+  title: CscTrackerInvest
+  description: Project description. This is the swagger 
+    ui based on the open api 3.0 specification of the CscTrackerInvest
+  version: 24.02.009.
+externalDocs:
+  description: Find out more about Swagger
+  url: 'http://swagger.io'
+servers:
+  - url: '/'
+paths:
+  '/metrics':
+    get:
+      tags:
+      - CscTrackerInvest
+      operationId: 'prometheus_metrics'
+      responses:
+        '200':
+          $ref: '#/components/responses/prometheus_metrics_response'
+  '/<library_name>/<version>':
+    get:
+      tags:
+      - CscTrackerInvest
+      operationId: 'hello_world'
+      parameters:
+      - in: path
+        name: library_name
+        schema:
+          type: string
+        description: None
+        required: True
+      - in: path
+        name: version
+        schema:
+          type: string
+        description: None
+        required: True
+      responses:
+        '200':
+          $ref: '#/components/responses/hello_world_response'
+components:
+  responses:
+    <lambda>_response:
+      description: <lambda> response
+      content:
+         application/json:
+             schema:
+                 $ref: '#/components/schemas/<lambda>_response_schema'
+    prometheus_metrics_response:
+      description: prometheus_metrics response
+      content:
+         application/json:
+             schema:
+                 $ref: '#/components/schemas/prometheus_metrics_response_schema'
+    hello_world_response:
+      description: hello_world response
+      content:
+         application/json:
+             schema:
+                 $ref: '#/components/schemas/hello_world_response_schema'
+  schemas:
+    <lambda>_response_schema:
+      type: object
+    prometheus_metrics_response_schema:
+      type: object
+    hello_world_response_schema:
+      type: object

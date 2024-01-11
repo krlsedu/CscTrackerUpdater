@@ -1,0 +1,16 @@
+version: '3'
+
+networks:
+  backend:
+    external: true
+
+services:
+  csctracker:
+    container_name: datasource
+    hostname: datasource
+    image: krlsedu/csctracker-invest
+    restart: always
+    networks:
+      - backend
+    ports:
+      - "5050:5000"
