@@ -13,10 +13,7 @@ updater_service = UpdaterService(starter.get_remote_repository())
 
 
 @app.route('/<library_name>/<version>')
-def hello_world(library_name, version):  # put application's code here
-    thead = threading.current_thread()
-    g.correlation_id = f"updater_{library_name}-{version}_{RequestInfo.get_request_id()}"
-    thead.__setattr__('correlation_id', g.correlation_id)
+def update_services(library_name, version):
     return updater_service.update(library_name, version, http_repository.get_headers()), 200, {
         'Content-Type': 'application/json'}
 
