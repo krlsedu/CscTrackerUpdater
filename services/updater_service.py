@@ -51,19 +51,30 @@ class UpdaterService:
                     if os.path.exists(folder_):
                         shutil.rmtree(folder_, onerror=del_rw)
                     Repo.clone_from(cred_repo_url, folder_)
-                    self.edit_file(f"{folder_}/requirements.txt", version, lib_name)
-                    self.commit_changes(folder_, f"Update {lib_name} to {version}")
-                    changes = self.push_changes(folder_)
-                    if changes["status"] == "ok":
-                        self.logger.info(f"Updated {app_att['app_att']} successfully.")
-                        app_att['library_version'] = version
-                        self.remote_repository.update("libraries", ['id'], app_att, headers)
-                    if os.path.exists(folder_):
-                        shutil.rmtree(folder_, onerror=del_rw)
-                    changes['app_att'] = app_att['app_att']
-                    changes['library_version'] = version
-                    changes['lib_name'] = lib_name
-                    returns_.append(changes)
+                    if self.edit_file(f"{folder_}/requirements.txt", version, lib_name):
+                        self.commit_changes(folder_, f"Update {lib_name} to {version}")
+                        changes = self.push_changes(folder_)
+                        if changes["status"] == "ok":
+                            self.logger.info(f"Updated {app_att['app_att']} successfully.")
+                            app_att['library_version'] = version
+                            self.remote_repository.update("libraries", ['id'], app_att, headers)
+                        if os.path.exists(folder_):
+                            shutil.rmtree(folder_, onerror=del_rw)
+                        changes['app_att'] = app_att['app_att']
+                        changes['library_version'] = version
+                        changes['lib_name'] = lib_name
+                        returns_.append(changes)
+                    else:
+                        self.logger.info(f"Library {lib_name} is already up to date.")
+                        returns_.append({
+                            "status": "ok",
+                            'app_att': app_att['app_att'],
+                            'library_version': version,
+                            'lib_name': lib_name
+                        })
+                        if os.path.exists(folder_):
+                            shutil.rmtree(folder_, onerror=del_rw)
+
                 except Exception as e:
                     self.logger.error(e)
                     error_ = {
@@ -74,6 +85,8 @@ class UpdaterService:
                         'error': str(e)
                     }
                     returns_.append(error_)
+                    if os.path.exists(folder_):
+                        shutil.rmtree(folder_, onerror=del_rw)
         except Exception as e:
             self.logger.error(e)
             returns_.append({"status": "error"})
@@ -84,14 +97,30 @@ class UpdaterService:
             with open(file_path, 'r') as file:
                 lines = file.readlines()
 
-            lines = [f"{lib_name}=={version}\n" if (line.startswith(f"{lib_name}=") or line == lib_name) else line for
-                     line in lines]
+            new_lines = []
+            is_same = True
+
+            for line in lines:
+                new_line = f"{lib_name}=={version}\n" if (line.startswith(f"{lib_name}=") or line == lib_name) else line
+
+                if line != new_line:
+                    is_same = False
+
+                new_lines.append(new_line)
+
+            if is_same:
+                self.logger.info("File is already up to date.")
+                return False
 
             with open(file_path, 'w') as file:
-                file.write("".join(lines))
+                file.write("".join(new_lines))
+
             self.logger.info("File edited successfully.")
+            return True
         except Exception as e:
-            raise f"An error occurred while editing the file: {str(e)}"
+            msg_ = f"An error occurred while editing the file: {str(e)}"
+            self.logger.error(msg_)
+            raise Exception(msg_)
 
     def commit_changes(self, repo_dir, commit_message):
         try:
@@ -100,7 +129,9 @@ class UpdaterService:
             repo.index.commit(commit_message)
             self.logger.info("Changes committed successfully.")
         except Exception as e:
-            raise f"An error occurred while committing the changes: {str(e)}"
+            msg_ = f"An error occurred while committing the changes: {str(e)}"
+            self.logger.error(msg_)
+            raise Exception(msg_)
 
     def push_changes(self, repo_dir, remote_name="origin", branch="master"):
         try:
@@ -121,4 +152,6 @@ class UpdaterService:
                 self.logger.info(f"Push successful: {output.strip()}")
                 return {"status": "ok"}
         except Exception as e:
-            raise f"An error occurred while pushing the changes: {str(e)}"
+            msg_ = f"An error occurred while pushing the changes: {str(e)}"
+            self.logger.error(msg_)
+            raise Exception(msg_)
