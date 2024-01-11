@@ -6,7 +6,7 @@ starter = Starter()
 app = starter.get_app()
 http_repository = starter.get_http_repository()
 
-updater_service = UpdaterService(starter.get_remote_repository())
+updater_service = UpdaterService(starter.get_remote_repository(), starter.get_http_repository())
 
 
 @app.route('/<library_name>/<version>', methods=['POST'])

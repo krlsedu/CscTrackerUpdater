@@ -1,18 +1,26 @@
 import logging
 import os
 import shutil
+import stat
 import subprocess
 
 from csctracker_py_core.models.emuns.config import Config
+from csctracker_py_core.repository.http_repository import HttpRepository
 from csctracker_py_core.repository.remote_repository import RemoteRepository
 from csctracker_py_core.utils.configs import Configs
 from git import Repo
 
 
+def del_rw(action, name, exc):
+    os.chmod(name, stat.S_IWRITE)
+    os.remove(name)
+
+
 class UpdaterService:
-    def __init__(self, remote_repository: RemoteRepository):
+    def __init__(self, remote_repository: RemoteRepository, http_repository: HttpRepository):
         self.logger = logging.getLogger()
         self.remote_repository = remote_repository
+        self.http_repository = http_repository
 
         self.username = Configs.get_env_variable(Config.GITHUB_USER)
         self.password = Configs.get_env_variable(Config.GITHUB_PASS)
@@ -22,9 +30,14 @@ class UpdaterService:
         self.logger.info(f"Updating {lib_name}")
         returns_ = []
         try:
+            args_ = {}
+            args = self.http_repository.get_args()
+            for key in args.keys():
+                args_[key] = args[key]
+            args_['library'] = lib_name
             apps_att = self.remote_repository.get_objects("libraries",
-                                                         data={"library": lib_name},
-                                                         headers=headers)
+                                                          data=args_,
+                                                          headers=headers)
             apps_att.sort(key=lambda x: (x['app_att'] == 'CscTrackerUpdater', x['app_att']))
             for app_att in apps_att:
                 try:
@@ -34,7 +47,7 @@ class UpdaterService:
                     cred_repo_url = repo_url.replace("https://", f"https://{self.username}:{self.password}@")
                     folder_ = f"static/{att_}"
                     if os.path.exists(folder_):
-                        shutil.rmtree(folder_)
+                        shutil.rmtree(folder_, onerror=del_rw)
                     Repo.clone_from(cred_repo_url, folder_)
                     self.edit_file(f"{folder_}/requirements.txt", version, lib_name)
                     self.commit_changes(folder_, f"Update {lib_name} to {version}")
@@ -44,7 +57,7 @@ class UpdaterService:
                         app_att['library_version'] = version
                         self.remote_repository.update("libraries", ['id'], app_att, headers)
                     if os.path.exists(folder_):
-                        shutil.rmtree(folder_)
+                        shutil.rmtree(folder_, onerror=del_rw)
                     changes['app_att'] = app_att['app_att']
                     changes['library_version'] = version
                     changes['lib_name'] = lib_name
@@ -98,6 +111,7 @@ class UpdaterService:
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=repo_dir)
 
             output, errors = p.communicate()
+            p.wait()
 
             if p.returncode:
                 raise f"Push failed: {errors.strip()}"
