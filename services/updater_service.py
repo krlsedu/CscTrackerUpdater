@@ -40,6 +40,8 @@ class UpdaterService:
                     self.logger.info(f"Updated {app_att['app_att']} successfully.")
                     app_att['version'] = version
                     self.remote_repository.update("libraries", ['id'], app_att, headers)
+                if os.path.exists(folder_):
+                    shutil.rmtree(folder_)
                 return changes
         except Exception as e:
             self.logger.error(e)
