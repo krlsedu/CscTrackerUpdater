@@ -59,7 +59,13 @@ class UpdaterService:
                             app_att['library_version'] = version
                             self.remote_repository.update("libraries", ['id'], app_att, headers)
                         if os.path.exists(folder_):
-                            shutil.rmtree(folder_, onerror=del_rw)
+                            os.chmod(folder_, stat.S_IWRITE)
+                            try:
+                                if os.path.exists(folder_):
+                                    shutil.rmtree(folder_, onerror=del_rw)
+                            except:
+                                pass
+                        pass
                         changes['app_att'] = app_att['app_att']
                         changes['library_version'] = version
                         changes['lib_name'] = lib_name
@@ -67,7 +73,7 @@ class UpdaterService:
                     else:
                         self.logger.info(f"Library {lib_name} is already up to date.")
                         returns_.append({
-                            "status": "ok",
+                            "status": "same",
                             'app_att': app_att['app_att'],
                             'library_version': version,
                             'lib_name': lib_name
@@ -85,8 +91,11 @@ class UpdaterService:
                         'error': str(e)
                     }
                     returns_.append(error_)
-                    if os.path.exists(folder_):
-                        shutil.rmtree(folder_, onerror=del_rw)
+                    try:
+                        if os.path.exists(folder_):
+                            shutil.rmtree(folder_, onerror=del_rw)
+                    except:
+                        pass
         except Exception as e:
             self.logger.error(e)
             returns_.append({"status": "error"})
