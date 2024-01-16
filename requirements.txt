@@ -1,4 +1,4 @@
-csctracker-py-core==24.02.024
+csctracker-py-core==24.03.001
 csctracker-queue-scheduler==24.02.002
 
 gitpython==3.1.41
